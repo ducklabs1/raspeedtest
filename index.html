@@ -1,0 +1,333 @@
+<head>
+<style> /* set the CSS */
+
+body { font: 12px Arial;}
+
+path.normal { 
+    stroke: steelblue;
+    stroke-width: 2;
+    fill: none;
+}
+
+path.minimum { 
+    stroke: red;
+    stroke-width: 2;
+    fill: none;
+}
+
+path.middle { 
+    stroke: orange;
+    stroke-width: 2;
+    fill: none;
+}
+
+path.max { 
+    stroke: green;
+    stroke-width: 2;
+    fill: none;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 60px;					
+    height: 28px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+}
+
+</style>
+</head>
+<body>
+<script src = "https://d3js.org/d3.v4.js"></script>
+<h1> Automatic Speedtest Graph</h1>
+<script>
+var linkArray = [];
+function getJson(url){
+	var jsonRequest = new XMLHttpRequest();
+	var result;
+	jsonRequest.onreadystatechange = function(){
+		if(this.readyState == 4 && this.status == 200){
+			result = JSON.parse(this.responseText);
+		}
+	}
+	jsonRequest.open("GET",url,false);
+	jsonRequest.send();
+	return result;
+}
+function changeDate(){
+	if(this.options[this.selectedIndex].value != "alltime"){
+		drawGraphs(this.options[this.selectedIndex].value);
+	}else{
+		var jsonstring = [];
+		var t = [];
+		for(var i=0;i<linkArray.length;i++){
+			t[i] = getJson("/logs/"+linkArray[i]);
+		}
+		t.push(getJson("/json"));
+		setTimeout(function(){
+		for(var i=0;i<t.length;i++){
+			jsonstring = jsonstring.concat(t[i]);
+		}
+		draw(jsonstring);
+		
+		},2000);
+		
+	}
+}
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function(){
+	if(this.readyState == 4 && this.status == 200){
+		var element = document.createElement("html");
+		var response = this.responseText;
+		var body = response.substring(response.indexOf("<ul id"),response.indexOf("</ul>")+5);
+		element.innerHTML = body;
+		var arr = [], l = element.getElementsByTagName("a");
+		var select = d3.select("body").insert("select","div").on("change",changeDate);
+		select.append("option")
+				  .attr("value","/json")
+				  .text("Heute");
+		for(var i = 0; i<l.length; i++){
+			var name = l[i].href.replace("http://supersecrethost.tplinkdns.com/logs/","");
+			linkArray[i] = name;
+			select.append("option")
+				  .attr("value","/logs/"+name)
+				  .text(name.replace(".json",""));
+		}
+		select.append("option")
+			  .attr("value","alltime")
+			  .text("Gesamter Zeitraum");
+	}
+}
+xhttp.open("GET", "/logs",true);
+xhttp.send();
+// set the dimensions and margins of the graph
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 1900 - margin.left - margin.right, //960
+    height = 500 - margin.top - margin.bottom;
+
+// parse the date / time
+var format = d3.timeParse("%Y-%m-%d %H:%M:%S");
+var textFormat = d3.timeFormat("%H:%M");
+
+// set the ranges
+var x = d3.scaleTime().range([0, width]);
+var y = d3.scaleLinear().range([height, 0]);
+
+var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+// define the line
+var downloadline = d3.line()
+    .x(function(d) { return x(d.time); })
+    .y(function(d) { return y(d.download); });
+	
+var uploadline = d3.line()
+	.x(function(d) { return x(d.time); })
+	.y(function(d) { return y(d.upload); });
+	
+var pingline = d3.line()
+	.x(function(d) { return x(d.time); })
+	.y(function(d) { return y(d.ping); });
+
+// append the svg obgect to the body of the page
+// appends a 'group' element to 'svg'
+// moves the 'group' element to the top left margin
+d3.select("body").append("h2").text("Download:");
+var download = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+d3.select("body").append("h2").text("Upload:");		  
+var upload = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+d3.select("body").append("h2").text("Ping:");
+var ping = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+function draw(data){
+	download.selectAll("*").remove();
+	upload.selectAll("*").remove();
+	ping.selectAll("*").remove();
+	data.forEach(function(d) {
+      d.time = format(d.time);
+	  d.textTime = textFormat(d.time);
+      d.download = +d.download;
+	  d.upload = +d.upload;
+	  d.ping = +d.ping;
+  });
+
+  // Scale the range of the data
+  x.domain(d3.extent(data, function(d) { return d.time; }));
+  y.domain([0, d3.max(data, function(d) { return d.download; })]);
+
+  // Add the valueline path.
+  download.append("path")
+      .data([data])
+      .attr("class", "normal line")
+      .attr("d", downloadline);
+	  download.selectAll("dot")
+        .data(data)
+      .enter().append("circle")
+        .attr("r", 3.5)
+        .attr("cx", function(d) { return x(d.time); })
+        .attr("cy", function(d) { return y(d.download); })
+		.on("mouseover", function(d) {		
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div	.html(d.textTime + "<br/>"  + d.download)	
+                .style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px");	
+            })					
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        });
+		
+	  download.append("path")
+      .data([[{time: data[0].time,download:28},{time: data[data.length-1].time,download:28}]])
+      .attr("class", "minimum line")
+      .attr("d", downloadline);
+	  
+	  download.append("path")
+      .data([[{time: data[0].time,download:0.9*50},{time: data[data.length-1].time,download:0.9*50}]])
+      .attr("class", "max line")
+      .attr("d", downloadline);
+	  
+	  download.append("path")
+      .data([[{time: data[0].time,download:38},{time: data[data.length-1].time,download:38}]])
+      .attr("class", "middle line")
+      .attr("d", downloadline);
+	  
+	  
+	 
+	  // Add the X Axis
+  download.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+  // Add the Y Axis
+  download.append("g")
+      .call(d3.axisLeft(y));
+	  
+ y.domain([0, d3.max(data, function(d) { return d.upload; })]);
+  upload.append("path")
+	  .data([data])
+	  .attr("class","normal line")
+	  .attr("d",uploadline);
+	  
+   	
+	upload.selectAll("dot")
+        .data(data)
+      .enter().append("circle")
+        .attr("r", 3.5)
+        .attr("cx", function(d) { return x(d.time); })
+        .attr("cy", function(d) { return y(d.upload); })
+		.on("mouseover", function(d) {		
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div	.html(d.textTime + "<br/>"  + d.upload)	
+                .style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px");	
+            })					
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        });
+		
+		upload.append("path")
+      .data([[{time: data[0].time,upload:2.7},{time: data[data.length-1].time,upload:2.7}]])
+      .attr("class", "minimum line")
+      .attr("d", uploadline);
+	  
+	  upload.append("path")
+      .data([[{time: data[0].time,upload:0.9*10},{time: data[data.length-1].time,upload:0.9*10}]])
+      .attr("class", "max line")
+      .attr("d", uploadline);
+	  
+	  upload.append("path")
+      .data([[{time: data[0].time,upload:3.5},{time: data[data.length-1].time,upload:3.5}]])
+      .attr("class", "middle line")
+      .attr("d", uploadline);
+	  
+	    upload.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+  // Add the Y Axis
+  upload.append("g")
+      .call(d3.axisLeft(y));
+	  
+	    y.domain([0, d3.max(data, function(d) { return d.ping; })]);
+	  ping.append("path")
+	  .data([data])
+	  .attr("class","normal line")
+	  .attr("d",pingline);
+	ping.selectAll("dot")
+        .data(data)
+      .enter().append("circle")
+        .attr("r", 3.5)
+        .attr("cx", function(d) { return x(d.time); })
+        .attr("cy", function(d) { return y(d.ping); })
+		.on("mouseover", function(d) {		
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div	.html(d.textTime + "<br/>"  + d.ping)	
+                .style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px");	
+            })					
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        });
+  ping.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+  // Add the Y Axis
+  ping.append("g")
+      .call(d3.axisLeft(y));
+}
+// Get the data
+function drawGraphs(url){
+d3.json(url, function(error, data) {
+  //if (error) throw error;
+	draw(data)
+  // format the data
+  
+
+});
+}
+
+drawGraphs("/json");
+</script>
+</body>

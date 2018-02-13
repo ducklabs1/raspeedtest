@@ -1,0 +1,18 @@
+{
+  "name": "raspeedtest",
+  "version": "1.0.0",
+  "description": "Speedtest that automatically tests your Internet Speeds and plots them into a graph",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bastian Wagner",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.2",
+    "node-schedule": "^1.3.0",
+    "serve-index": "^1.9.1",
+    "speedtest-net": "^1.4.1",
+    "sqlite3": "^3.1.13"
+  }
+}
