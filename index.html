@@ -87,6 +87,7 @@ function changeDate(){
 		
 	}
 }
+
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function(){
 	if(this.readyState == 4 && this.status == 200){
@@ -100,7 +101,7 @@ xhttp.onreadystatechange = function(){
 				  .attr("value","/json")
 				  .text("Heute");
 		for(var i = 0; i<l.length; i++){
-			var name = l[i].href.replace("http://supersecrethost.tplinkdns.com/logs/","");
+			var name = l[i].href.replace(window.location.href+"logs/","");
 			linkArray[i] = name;
 			select.append("option")
 				  .attr("value","/logs/"+name)
