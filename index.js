@@ -40,7 +40,7 @@ app.get('/json',function(req,res){
 	});
 });
 app.get('/',function(req,res){
-	res.sendFile("/home/pi/Downloads/raspeedtest/index.html");
+	res.sendFile("HOME_DIRECTORY/index.html");
 });
 app.use("/logs", express.static('logs'));
 app.use('/logs', serveIndex(__dirname + '/logs'));
@@ -54,7 +54,7 @@ app.get('/save', function(req,res){
 		db.each("SELECT * FROM tests",function(err,row){
 				result.push(row);
 			},function(err,num){
-				var stream = fs.createWriteStream("/home/pi/Downloads/raspeedtest/logs/"+filename);
+				var stream = fs.createWriteStream("HOME_DIRECTORY/logs/"+filename);
 				stream.once('open',function(){
 					stream.write(JSON.stringify(result));
 					stream.end();
@@ -89,7 +89,7 @@ var save = schedule.scheduleJob('59 23 * * *', function(){
 		db.each("SELECT * FROM tests",function(err,row){
 				result.push(row);
 			},function(err,num){
-				var stream = fs.createWriteStream("/home/pi/Downloads/raspeedtest/logs/"+filename);
+				var stream = fs.createWriteStream("HOME_DIRECTORY/logs/"+filename);
 				stream.once('open',function(){
 					stream.write(JSON.stringify(result));
 					stream.end();
