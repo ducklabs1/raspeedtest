@@ -190,21 +190,22 @@ var download = d3.select("body").append("svg")
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
-d3.select("body").append("h2").text("Upload:");		  
+          "translate(" + margin.left + ")"); //"translate(" + margin.left + "," + margin.top + ")"); 
+d3.select("body").append("h2").text("Upload:");
 var upload = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
+          "translate(" + margin.left + ")");
+d3.select("body").append("br"); 
 d3.select("body").append("h2").text("Ping:");
 var ping = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
+          "translate(" + margin.left + ")");
 
 function draw(data){
 	download.selectAll("*").remove();
@@ -261,6 +262,21 @@ function draw(data){
       .data([[{time: data[0].time,download:38},{time: data[data.length-1].time,download:38}]])
       .attr("class", "middle line")
       .attr("d", downloadline);
+	  
+	  download.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Speed in Mbps");   
+
+	  download.append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + 
+                           (height + margin.top + 20) + ")")
+      .style("text-anchor", "middle")
+      .text("Date/Time");
 	  
 	  
 	 
@@ -328,6 +344,21 @@ function draw(data){
 	  .data([data])
 	  .attr("class","normal line")
 	  .attr("d",pingline);
+	  
+	  upload.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Speed in Mbps");   
+
+	  upload.append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + 
+                           (height + margin.top + 20) + ")")
+      .style("text-anchor", "middle")
+      .text("Date/Time");
 	/*ping.selectAll("dot")
         .data(data)
       .enter().append("circle")
@@ -354,6 +385,21 @@ function draw(data){
   // Add the Y Axis
   ping.append("g")
       .call(d3.axisLeft(y));
+	  
+	ping.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Ping in ms");   
+
+	  ping.append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + 
+                           (height + margin.top + 20) + ")")
+      .style("text-anchor", "middle")
+      .text("Date/Time");
 }
 // Get the data
 function drawGraphs(url){
