@@ -68,13 +68,13 @@ function getJson(url){
 	return result;
 }
 function changeDate(){
-	if(this.options[this.selectedIndex].value != "alltime"){
+	if(this.options[this.selectedIndex].value != "alltime" && this.options[this.selectedIndex].value != "telekom" && this.options[this.selectedIndex].value != "vodafone"){
 		drawGraphs(this.options[this.selectedIndex].value);
-	}else{
+	}else if(this.options[this.selectedIndex].value == "alltime"){
 		var jsonstring = [];
 		var t = [];
 		for(var i=0;i<linkArray.length;i++){
-			t[i] = getJson("/logs/"+linkArray[i]);
+			t.push(getJson("/logs/"+linkArray[i]));
 		}
 		t.push(getJson("/json"));
 		setTimeout(function(){
@@ -84,7 +84,38 @@ function changeDate(){
 		draw(jsonstring);
 		
 		},2000);
+	}else if(this.options[this.selectedIndex].value == "vodafone"){
+		var jsonstring = [];
+		var t = [];
+		for(var i=0;i<linkArray.length;i++){
+			if(linkArray[i]<"2018-03-13.json"){
+				t.push(getJson("/logs/"+linkArray[i]));
+			}
+		}
+		setTimeout(function(){
+		for(var i=0;i<t.length;i++){
+			jsonstring = jsonstring.concat(t[i]);
+		}
+		draw(jsonstring);
 		
+		},2000);
+	}else if(this.options[this.selectedIndex].value == "telekom"){
+		var jsonstring = [];
+		var t = [];
+		for(var i=0;i<linkArray.length;i++){
+			if(linkArray[i]>"2018-03-13.json"){
+				console.log(linkArray[i]);
+				t.push(getJson("/logs/"+linkArray[i]));
+			}
+		}
+		t.push(getJson("/json"));
+		setTimeout(function(){
+		for(var i=0;i<t.length;i++){
+			jsonstring = jsonstring.concat(t[i]);
+		}
+		draw(jsonstring);
+		
+		},2000);
 	}
 }
 
@@ -110,6 +141,12 @@ xhttp.onreadystatechange = function(){
 		select.append("option")
 			  .attr("value","alltime")
 			  .text("Gesamter Zeitraum");
+	    select.append("option")
+			  .attr("value","vodafone")
+			  .text("Vodafone");
+		select.append("option")
+			  .attr("value","telekom")
+			  .text("Telekom");
 	}
 }
 xhttp.open("GET", "/logs",true);
@@ -190,7 +227,7 @@ function draw(data){
       .data([data])
       .attr("class", "normal line")
       .attr("d", downloadline);
-	  download.selectAll("dot")
+	  /*download.selectAll("dot")
         .data(data)
       .enter().append("circle")
         .attr("r", 3.5)
@@ -208,7 +245,7 @@ function draw(data){
             div.transition()		
                 .duration(500)		
                 .style("opacity", 0);	
-        });
+        });*/
 		
 	  download.append("path")
       .data([[{time: data[0].time,download:28},{time: data[data.length-1].time,download:28}]])
@@ -243,7 +280,7 @@ function draw(data){
 	  .attr("d",uploadline);
 	  
    	
-	upload.selectAll("dot")
+	/*upload.selectAll("dot")
         .data(data)
       .enter().append("circle")
         .attr("r", 3.5)
@@ -261,7 +298,7 @@ function draw(data){
             div.transition()		
                 .duration(500)		
                 .style("opacity", 0);	
-        });
+        });*/
 		
 		upload.append("path")
       .data([[{time: data[0].time,upload:2.7},{time: data[data.length-1].time,upload:2.7}]])
@@ -291,7 +328,7 @@ function draw(data){
 	  .data([data])
 	  .attr("class","normal line")
 	  .attr("d",pingline);
-	ping.selectAll("dot")
+	/*ping.selectAll("dot")
         .data(data)
       .enter().append("circle")
         .attr("r", 3.5)
@@ -309,7 +346,7 @@ function draw(data){
             div.transition()		
                 .duration(500)		
                 .style("opacity", 0);	
-        });
+        });*/
   ping.append("g")
       .attr("transform", "translate(0," + height + ")")
       .call(d3.axisBottom(x));
